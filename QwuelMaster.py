@@ -25,9 +25,9 @@ class QwuelMode:
         self.WORD = "PLAYER_1"
         self.MIN_PLAYER = 1
         self.MAX_PLAYER = 10
-        self.ELIMINATE_CONDITION = "LAST_TYPE"
+        self.ELIMINATE_CONDITION = "TYPE_LAST"
         self.HEALTH = 3
-        self.WIN_CONDITION = "LAST_PLAYER"
+        self.WIN_CONDITION = "PLAYER_LAST"
         self.POINT_AWARDED = "0"
         self.POINT_CONDITION = "NONE"
         self.SPECIAL = "NONE"
@@ -47,7 +47,6 @@ class QwuelMode:
             self.WIN_CONDITION = "POINT_5"
         elif mode == "elimination":
             self.MIN_PLAYER = 3
-            self.ELIMINATE_CONDITION = "LAST_TYPE"
             self.HEALTH = 1
         elif mode == "glory":
             self.MIN_PLAYER = 3
@@ -64,12 +63,11 @@ class QwuelMode:
         elif mode == "tourney":
             self.WORD = "ROUND_1"
             self.MIN_PLAYER = 4
-            self.ELIMINATE_CONDITION = "LAST_TYPE"
             self.HEALTH
             self.SPECIAL = "TOURNEY"
         elif mode == "hardcore":
             self.WORD = "PLAYER_3"
-            self.ELIMINATE_CONDITION = "LAST_TYPE|TYPE_WRONG"
+            self.ELIMINATE_CONDITION = "TYPE_LAST|TYPE_WRONG"
             self.HEALTH = 1
         else:
             raise KeyError
@@ -118,7 +116,23 @@ class QwuelGame:
         pass
 
     def win_players(self):
-        pass
+        win_condition, second_condition = self.mode.WIN_CONDITION.split('_')
+        msgs = []
+        if win_condition == "PLAYER":
+            if second_condition == "LAST":
+                if len(self.players) == 1:
+                    msgs.append(self.mention_user(self.players[0].player) + " has won the game!!!")
+        elif win_condition == "POINT":
+            winners = ""
+            for i in self.players:
+                if i.points >= int(second_condition):
+                    winners += self.mention_user(i.player) + " "
+            winners = winners.strip()
+            if len(winners.split(" ")) > 1:
+                msgs.append(winners + " have tied the game!")
+            elif len(winners.split(" ")) == 1:
+                msgs.append(winners + " has won the game!")
+        return msgs
 
 
     def start_game(self):
@@ -126,7 +140,7 @@ class QwuelGame:
             if len(self.players) > self.num_players:
                 return ["Too many players! Cannot start game."]
             return []
-        elif len(self.word_list) < self.num_players:
+        elif len(self.word_list) < self.num_players**2 * int(self.mode.WORD.split('_')[1]):
             if len(self.word_list) == 0:
                 return ["No packages have been added! Please add a package for the game to begin."]
             else:
@@ -199,7 +213,7 @@ class QwuelGame:
         await self.send('\n'.join(msgs))
 
     async def pick(self, user, word):
-        pass
+        await self.send('\n'.join(self.win_players()))
     
     async def add(self, user, package_name):
         msgs = []
