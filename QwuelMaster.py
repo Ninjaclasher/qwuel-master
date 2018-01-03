@@ -23,7 +23,7 @@ class QwuelMode:
     def __init__(self, mode : str):
         mode = mode.lower()
         self.WORD = "PLAYER_1"
-        self.MIN_PLAYER = 1
+        self.MIN_PLAYER = 2
         self.MAX_PLAYER = 10
         self.ELIMINATE_CONDITION = "TYPE_LAST"
         self.HEALTH = 3
@@ -132,6 +132,8 @@ class QwuelGame:
                 msgs.append(winners + " have tied the game!")
             elif len(winners.split(" ")) == 1:
                 msgs.append(winners + " has won the game!")
+        if len(msgs) > 0:
+            self.reset()
         return msgs
 
 
@@ -254,8 +256,11 @@ async def process_command(send, message, command):
     except KeyError:
         game = games[message.channel] = QwuelGame(send,message.channel)
     try:
-        if command[0] == "start" and len(command) == 3:
-            await game.start(message.author, command[1], int(command[2]))
+        if command[0] == "start":
+            if len(command) == 3:
+                await game.start(message.author, command[1], int(command[2]))
+            elif len(command) == 2:
+                await game.start(message.author, 'classic', int(command[1]))
         elif command[0] == "join" and len(command) == 1:
             await game.join(message.author)
         elif command[0] == "leave" and len(command) == 1:
