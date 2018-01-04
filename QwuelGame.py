@@ -12,7 +12,7 @@ class QwuelGame:
         self.cur_round = 0
         self.num_players = 0
         self.round_words_typed = 0
-        self.mode = qMode.QwuelMode("classic")
+        self.mode = None
         self.players = []
         self.packages_added = set()
         self.word_list = set()
@@ -44,7 +44,7 @@ class QwuelGame:
         if self.players[player_idx].health == 0:
             user = self.mention_user(self.players[player_idx].player)
             del self.players[player_idx]
-            return user + ' has no more lives!'
+            return user + ' has no more lives and is eliminated!'
         else:
             return self.mention_user(self.players[player_idx].player) + ' has ' + str(self.players[player_idx].health) + ' :hearts: left!'
 
@@ -62,10 +62,10 @@ class QwuelGame:
                 elif second_condition == "LEAST":
                     user, words_typed = -1, 10000
                     for i in range(len(self.players)):
-                        if self.players[i].words_typed < words_typed:
+                        if len(self.players[i].words_typed) < words_typed:
                             user = i
-                            words_typed = self.players[i].words_typed
-                        elif self.players[i].words_typed == words_typed:
+                            words_typed = len(self.players[i].words_typed)
+                        elif len(self.players[i].words_typed) == words_typed:
                             user = -1
                     if user == -1:
                         msgs.append('Multiple players typed ' + str(words_typed) + ' words! Nobody loses a life!')
@@ -169,6 +169,9 @@ class QwuelGame:
     def start_round(self):
         word_gen_type, word_gen_num = self.mode.WORD.split('_')
         word_gen_num = int(word_gen_num)
+        if len(self.word_avail) < len(self.players)*word_gen_num:
+            self.word_avail = self.word_avail | self.word_cur_type
+            self.word_cur_type = set()
         if word_gen_type == "ROUND":
             self.word_cur = random.sample(self.word_avail,k = word_gen_num)
         elif word_gen_type == "PLAYER":
@@ -176,8 +179,8 @@ class QwuelGame:
 
         self.word_avail = self.word_avail - set(self.word_cur)
         self.cur_round += 1
-        for user in self.players:
-            user.words_typed = 0
+        for x in self.players:
+            x.words_typed = set()
         self.round_words_typed = 0
         return "The words are: **" + " ".join(self.word_cur) + "**"        
 
@@ -226,28 +229,36 @@ class QwuelGame:
 
     async def pick(self, user, word):
         msgs = []
-        player = self.players.index(qPlayer.QwuelPlayer(user, self.mode.HEALTH))
+        pidx = self.players.index(qPlayer.QwuelPlayer(user, self.mode.HEALTH))
         if word in self.word_cur:
             idx = self.word_cur.index(word)
-            if self.players[player].words_typed > 0 and self.mode.SPECIAL == "NONE":
+            type_all = "TYPE_ALL" in self.mode.SPECIAL.split("|")
+            if len(self.players[pidx].words_typed) > 0 and self.mode.SPECIAL == "NONE":
                 msgs.append("You already typed this round, " + self.mention_user(user) + "!")
-            elif word in self.word_cur_type:
+            elif type_all and word in self.players[pidx].words_typed:
+                msgs.append("You have already typed this word!")
+            elif not type_all and word in self.word_cur_type:
                 msgs.append(word + " has already been picked!")
             else:
-                self.add_points(player, idx)
-                self.players[player].words_typed += 1
+                self.add_points(pidx, idx)
+                self.players[pidx].words_typed.add(word)
                 self.round_words_typed += 1
                 self.word_cur_type.append(word)
                 msgs.append(self.mention_user(user) + " has picked " + word + "!")
+                if self.round_words_typed == (len(self.word_cur) * (1 if not type_all else len(self.players))):
+                    msgs.extend(self.eliminate_players(pidx))
+                    ret = self.win_players()
+                    msgs.extend(ret)
+                    if len(ret) == 0:
+                        msgs.extend(self.leaderboard())
+                        msgs.append(self.start_round())
         else:
-            msgs.append(word + " does not exist in this round!")
-        if self.round_words_typed == len(self.word_cur):
-            msgs.extend(self.eliminate_players(player))
-            ret = self.win_players()
-            msgs.extend(ret)
-            if len(ret) == 0:
-                msgs.extend(self.leaderboard())
-                msgs.append(self.start_round())
+            if "TYPE_WRONG" in self.mode.ELIMINATE_CONDITION.split("|"):
+                msgs.append(self.mention_user(user) + ' mistyped a word!')
+                msgs.append(self.damage(pidx))
+                msgs.extend(self.win_players())
+            else:
+                msgs.append(word + " does not exist in this round!")
         await self.send('\n'.join(msgs))
     
     async def add(self, user, package_name):

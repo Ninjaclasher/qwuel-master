@@ -2,7 +2,7 @@ class QwuelMode:
     def __init__(self, mode : str):
         mode = mode.lower()
         self.WORD = "PLAYER_1"
-        self.MIN_PLAYER = 1
+        self.MIN_PLAYER = 2
         self.MAX_PLAYER = 10
         self.ELIMINATE_CONDITION = "TYPE_LAST"
         self.HEALTH = 3
@@ -46,6 +46,6 @@ class QwuelMode:
             self.WORD = "PLAYER_3"
             self.ELIMINATE_CONDITION = "TYPE_LAST|TYPE_WRONG"
             self.HEALTH = 1
-            self.SPECIAL = "HARDCORE"
+            self.SPECIAL = "TYPE_ALL"
         else:
             raise KeyError

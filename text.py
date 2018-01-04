@@ -1,3 +1,4 @@
+import string
 # Stores info for help command
 command_info = {
     "add" : ["`]add <pack>`", "Requests to add a pack to the deck."],
@@ -29,6 +30,7 @@ legendary = [
     ]
 
 packages = {
+    "letters" : [i for i in string.ascii_letters],
     "eggz" : [
         "Eggcelent", "Eggstreme", "Eggstremism", "Eggscalating", "Eggscalator",
         "Eggsquisite", "Eggspected", "Uneggspected", "Eggceptional", "Eggcruiciating",

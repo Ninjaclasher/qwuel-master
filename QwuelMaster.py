@@ -1,5 +1,4 @@
 #  TODO GAMEMODES
-#  HARDCORE
 #  TOURNEY
 
 import random
