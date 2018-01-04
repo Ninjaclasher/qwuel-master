@@ -2,7 +2,7 @@ class QwuelMode:
     def __init__(self, mode : str):
         mode = mode.lower()
         self.WORD = "PLAYER_1"
-        self.MIN_PLAYER = 2
+        self.MIN_PLAYER = 1
         self.MAX_PLAYER = 10
         self.ELIMINATE_CONDITION = "TYPE_LAST"
         self.HEALTH = 3
@@ -14,13 +14,13 @@ class QwuelMode:
             pass
         elif mode == "hog":
             self.WORD = "ROUND_1"
-            self.POINT_CONDITION = "FIRST_TYPE_1"
+            self.POINT_CONDITION = "TYPE_FIRST_1"
             self.POINT_AWARDED = "ROUND"
             self.ELIMINATE_CONDITION = "NONE"
             self.WIN_CONDITION = "POINT_15"
         elif mode == "duel":
             self.WORD = "ROUND_1"
-            self.POINT_CONDITION = "FIRST_TYPE_1"
+            self.POINT_CONDITION = "TYPE_FIRST_1"
             self.POINT_AWARDED = "1"
             self.ELIMINATE_CONDITION = "NONE"
             self.WIN_CONDITION = "POINT_5"
@@ -29,15 +29,13 @@ class QwuelMode:
             self.HEALTH = 1
         elif mode == "glory":
             self.MIN_PLAYER = 3
-            self.POINT_CONDITION = "FIRST_TYPE_3"
+            self.POINT_CONDITION = "TYPE_FIRST_3"
             self.POINT_AWARDED = "PLAYER"
             self.ELIMINATE_CONDITION = "NONE"
             self.WIN_CONDITION = "POINT_15"
         elif mode == "banquet":
             self.WORD = "PLAYER_2"
-            self.ELIMINATE_CONDITION = "POINT_LEAST"
-            self.POINT_AWARDED = "1"
-            self.POINT_CONDITION = "FIRST_TYPE_1"
+            self.ELIMINATE_CONDITION = "TYPE_LEAST"
             self.SPECIAL = "TYPE_MULTIPLE"
         elif mode == "tourney":
             self.WORD = "ROUND_1"
@@ -48,5 +46,6 @@ class QwuelMode:
             self.WORD = "PLAYER_3"
             self.ELIMINATE_CONDITION = "TYPE_LAST|TYPE_WRONG"
             self.HEALTH = 1
+            self.SPECIAL = "HARDCORE"
         else:
             raise KeyError
